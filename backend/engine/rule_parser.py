@@ -83,15 +83,25 @@ def _freeze(value):
     return value
 
 
-def _normalize_risk_score(score):
+def normalize_risk_score(score, default=None):
+    """统一风险分口径：0-100 整数。
+
+    - 未填写（None）：取默认分 config.DEFAULT_RISK_SCORE；
+    - 可解析为数字：截断为整数并夹取到 [0, 100]；
+    - 非法类型/无法解析：按 0 处理（不贡献风险分）。
+    """
+    if default is None:
+        default = config.DEFAULT_RISK_SCORE
     if score is None:
-        return 5
+        return default
     try:
         score = int(score)
     except (TypeError, ValueError):
-        return 5
-    if score > 100 or score <= 0:
-        return 5
+        return 0
+    if score < 0:
+        return 0
+    if score > 100:
+        return 100
     return score
 
 
@@ -278,9 +288,8 @@ class CompiledRule:
             action["type"] = atype
         if atype not in config.ACTION_TYPES:
             raise RuleValidationError(f"规则 {self.id} 动作类型非法: {atype}")
-        if "risk_score" not in action:
-            action["risk_score"] = 5
-        action["risk_score"] = _normalize_risk_score(action.get("risk_score"))
+        action.setdefault("risk_score", config.DEFAULT_RISK_SCORE)
+        action["risk_score"] = normalize_risk_score(action.get("risk_score"))
         self.action = action
 
         dd = list(action.get("dedup_fields") or [])

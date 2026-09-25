@@ -58,6 +58,9 @@ DEFAULT_SETTINGS = {
 # 动作类型
 ACTION_TYPES = ["reject", "review", "pass", "alert"]
 
+# 风险分统一口径：0-100 整数；规则/动作节点未填写风险分时的默认值
+DEFAULT_RISK_SCORE = 50
+
 # 条件操作符
 CONDITION_OPS = ["==", "!=", ">", ">=", "<", "<=", "in", "not_in", "contains", "regex", "exists"]
 

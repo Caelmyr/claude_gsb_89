@@ -22,7 +22,7 @@ import time
 
 from backend import config
 from backend.storage import atomic_write_json, read_json, shard_path_for_day
-from backend.engine.rule_parser import _get_field
+from backend.engine.rule_parser import _get_field, normalize_risk_score
 
 LEVEL_ORDER = {"低": 1, "中": 2, "高": 3, "严重": 4}
 
@@ -141,7 +141,8 @@ class AlertAggregator:
                 existing["count"] = existing.get("count", 1) + 1
                 existing["last_seen"] = ts
                 existing["max_risk_score"] = max(
-                    existing.get("max_risk_score", 0), int(rule.action.get("risk_score", 0)))
+                    existing.get("max_risk_score", 0),
+                    normalize_risk_score(rule.action.get("risk_score")))
                 existing["event_sample"] = event
                 self._persist_day(self._day_key(existing["first_seen"]))
                 return existing, False
@@ -152,8 +153,8 @@ class AlertAggregator:
                 "rule_name": rule.name,
                 "fingerprint": fp,
                 "level": rule.action.get("level", "中"),
-                "risk_score": int(rule.action.get("risk_score", 50)),
-                "max_risk_score": int(rule.action.get("risk_score", 50)),
+                "risk_score": normalize_risk_score(rule.action.get("risk_score")),
+                "max_risk_score": normalize_risk_score(rule.action.get("risk_score")),
                 "action": rule.action.get("type", "alert"),
                 "reason": rule.name,
                 "subject": subject,
