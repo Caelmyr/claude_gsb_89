@@ -83,10 +83,6 @@ def simulate():
         act = d.get("action")
         if act == "reject":
             rejected += 1
-        if act == "review":
-            rejected += 1
-        if act == "alert":
-            rejected += 1
     return jsonify({
         "ok": True,
         "count": count,

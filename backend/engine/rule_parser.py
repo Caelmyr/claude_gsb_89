@@ -84,15 +84,14 @@ def _freeze(value):
 
 
 def _normalize_risk_score(score):
+    """统一风险分口径：0~100 整数；未填写或无法解析时取默认分。"""
     if score is None:
-        return 5
+        return config.DEFAULT_RISK_SCORE
     try:
         score = int(score)
     except (TypeError, ValueError):
-        return 5
-    if score > 100 or score <= 0:
-        return 5
-    return score
+        return config.DEFAULT_RISK_SCORE
+    return max(0, min(100, score))
 
 
 class RuleValidationError(ValueError):
@@ -279,7 +278,7 @@ class CompiledRule:
         if atype not in config.ACTION_TYPES:
             raise RuleValidationError(f"规则 {self.id} 动作类型非法: {atype}")
         if "risk_score" not in action:
-            action["risk_score"] = 5
+            action["risk_score"] = config.DEFAULT_RISK_SCORE
         action["risk_score"] = _normalize_risk_score(action.get("risk_score"))
         self.action = action
 

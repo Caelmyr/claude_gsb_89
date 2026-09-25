@@ -90,7 +90,7 @@ class RiskEngine:
     # ------------------------------------------------------------------
     # 决策动作优先级
     # ------------------------------------------------------------------
-    _ACTION_RANK = {"reject": 2, "review": 3, "alert": 1, "pass": 0}
+    _ACTION_RANK = {"reject": 3, "review": 2, "alert": 1, "pass": 0}
 
     def _decide(self, fired):
         """根据命中规则集计算最终动作与风险分。"""
@@ -101,7 +101,7 @@ class RiskEngine:
         best_rank = -1
         max_score = 0
         for f in fired:
-            score = int(f.action.get("risk_score", 50))
+            score = int(f.action.get("risk_score", config.DEFAULT_RISK_SCORE))
             max_score = max(max_score, score)
             f_type = f.action.get("type", "alert")
             f_rank = ranks.get(f_type, 0)
@@ -110,8 +110,6 @@ class RiskEngine:
                 best_type = f_type
         if best_type is None:
             best_type = "pass"
-        if best_type == "reject":
-            best_type = "review"
         return best_type, max_score
 
     # ------------------------------------------------------------------
@@ -212,14 +210,6 @@ class RiskEngine:
             m["alerted"] += len(alert_results)
 
         display_action = action
-        if action == "reject":
-            display_action = "review"
-        elif action == "review":
-            display_action = "reject"
-        elif action == "alert":
-            display_action = "pass"
-        else:
-            display_action = "pass"
         name_map = {r.id: r.description for r in fired}
         reason_map = {r.id: r.name for r in fired}
         action_map = {r.id: r.action.get("type", "alert") for r in fired}
@@ -229,7 +219,7 @@ class RiskEngine:
                 "rule_id": r.id,
                 "rule_name": name_map.get(r.id, r.name),
                 "reason": reason_map.get(r.id, r.action.get("reason", r.name)),
-                "risk_score": int(r.action.get("risk_score", 50)),
+                "risk_score": int(r.action.get("risk_score", config.DEFAULT_RISK_SCORE)),
                 "action": action_map.get(r.id, "alert"),
                 "priority": r.priority,
                 "agg_values": fired_agg.get(r.id, []),
@@ -293,7 +283,7 @@ class RiskEngine:
                 "rule_id": r.id,
                 "rule_name": r.description,
                 "reason": r.name,
-                "risk_score": int(r.action.get("risk_score", 50)),
+                "risk_score": int(r.action.get("risk_score", config.DEFAULT_RISK_SCORE)),
                 "action": r.action.get("type", "alert"),
                 "agg_values": fired_agg.get(r.id, []),
             }
@@ -346,7 +336,7 @@ class RiskEngine:
             "agg_checks": aggs,
             "matched": all_ok,
             "action": rule.action.get("type", "alert"),
-            "risk_score": rule.action.get("risk_score", 50),
+            "risk_score": rule.action.get("risk_score", config.DEFAULT_RISK_SCORE),
             "reason": rule.action.get("reason", rule.name),
         }
 
